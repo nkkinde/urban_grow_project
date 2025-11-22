@@ -1,0 +1,16 @@
+# FastAPI & Web Framework
+fastapi==0.121.3
+uvicorn==0.38.0
+starlette==0.50.0
+
+# Text-to-Speech (Microsoft Edge TTS)
+edge-tts==7.2.3
+
+# HTTP Client & Networking
+aiohttp==3.13.2
+requests==2.32.5
+urllib3==2.5.0
+
+# Core Dependencies
+pydantic==2.12.4
+python-dateutil==2.9.0.post0

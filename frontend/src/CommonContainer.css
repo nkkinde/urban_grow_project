@@ -1,0 +1,14 @@
+.common-container {
+  background-color: #def1e5;
+  width: 100%;
+  max-width: 390px;
+  height: 100vh;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  font-family: sans-serif;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}

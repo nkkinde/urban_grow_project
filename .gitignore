@@ -1,0 +1,51 @@
+# 환경 변수 (보안)
+.env
+.env.local
+.env.*.local
+
+# 의존성
+node_modules/
+venv/
+.venv/
+TTS/.venv/
+
+# 빌드 결과
+dist/
+dist-ssr/
+build/
+.output
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# 캐시
+.cache/
+.parcel-cache
+**/.vitepress/cache
+**/.vitepress/dist
+.eslintcache
+.stylelintcache
+.tsbuildinfo
+
+# 파이썬
+__pycache__/
+*.pyc
+*.pyo
+
+# 모델 파일 (큰 바이너리)
+*.pth
+*.pt
+*.ckpt

@@ -1,0 +1,233 @@
+html, body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.main-container {
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  /* 하단 네비 + 물주기 버튼까지 여유 있게 */
+  padding-bottom: 140px;
+  min-height: 100vh;
+  background-color: #def1e5;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 상단바 */
+.top-bar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+  position: relative;
+}
+
+.profile-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #d6f5c9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* 제목 */
+.mainpage-title {
+  font-size: 2.5rem;
+  color: white;
+  margin: 20px 0 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 날씨 아이콘 그룹 */
+.icon-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* 식물 이름 */
+.plant-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #444;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 4px;
+  width: 80%;
+}
+
+/* 식물 애니메이션 영상 */
+.video-wrapper {
+  width: 220px;
+  height: 220px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+video, img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.roomindoor-temperature {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+/* 🔹 AI 챗봇 영역 스타일 */
+.chat-container {
+  width: 100%;
+  max-width: 340px;
+  max-height: 216px;
+  background-color: #f3fbf7;
+  border-radius: 16px;
+  padding: 10px 12px;
+  border: 1px solid #c7e6d5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: 260px;    
+  overflow: hidden;
+  margin: 16px auto 12px;
+}
+
+.chat-messages {
+  flex: 1;                 /* 높이 자동 배분 */
+  overflow-y: auto;        /* 내부 스크롤 */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+/* 공통 말풍선 스타일 */
+.chat-bubble {
+  max-width: 75%;
+  padding: 7px 11px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
+/* AI 말풍선 – 진한 초록 + 흰색 글자 */
+.chat-bubble.ai {
+  align-self: flex-start;
+  background-color: #4a7c59;
+  color: #ffffff;
+}
+
+/* 유저 말풍선 – 파스텔 블루 */
+.chat-bubble.user {
+  align-self: flex-end;
+  background-color: #71c9f0;
+  color: #ffffff;
+}
+
+/* 입력 영역 – 흰 배경, 둥근 박스 */
+.chat-input-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  background-color: #ffffff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  border: 1px solid #cfd8dc;
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #333333;
+  font-size: 0.9rem;
+}
+
+.chat-input::placeholder {
+  color: #9eafb5;
+}
+
+/* 전송 버튼 – UrbanGrow 메인 컬러랑 맞추기 */
+.chat-send-button {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background-color: #4a7c59;          /* 진초록 */
+  color: #ffffff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chat-send-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.chat-send-button:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+
+.water-section {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 1000;
+}
+
+.water-button {
+  background-color: #cceeff;
+  color: #0077aa;
+  font-size: 1.2rem;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 6px;
+}
+
+.water-button:hover {
+  background-color: #b3e0ff;
+}
+
+.last-watered {
+  font-size: 0.9rem;
+  color: #555;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 4px 10px;
+  border-radius: 12px;
+}

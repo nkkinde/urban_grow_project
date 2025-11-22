@@ -1,0 +1,54 @@
+.write-container {
+  background-color: #def1e5;
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: sans-serif;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+.write-title {
+  font-size: 2rem;
+  color: #4a7c59;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.memo-textarea {
+  width: 100%;
+  height: 300px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid #a5d6a7;
+  resize: none;
+  font-size: 1rem;
+  line-height: 1.5;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.save-button,
+.cancel-button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.save-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.cancel-button {
+  background-color: #ccc;
+  color: #333;
+}

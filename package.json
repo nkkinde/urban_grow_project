@@ -1,0 +1,13 @@
+{
+  "name": "urban-grow-dev",
+  "private": true,
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && node app.js",
+    "tts": "cd tts && uvicorn app:app --host 0.0.0.0 --port 5001 --reload",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\" \"npm run tts\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

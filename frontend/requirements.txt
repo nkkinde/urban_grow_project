@@ -1,0 +1,24 @@
+# React 프론트엔드 패키지는 package.json에 정의되어 있습니다.
+# npm install을 실행하여 설치하세요.
+
+# package.json 내용:
+# 
+# Dependencies:
+# {
+#   "react": "^19.0.0",                    // React 라이브러리
+#   "react-dom": "^19.0.0",                // React DOM 렌더링
+#   "react-router-dom": "^7.5.3",          // 라우팅
+#   "axios": "^1.9.0",                     // HTTP 클라이언트
+#   "react-icons": "^5.5.0",               // 아이콘 라이브러리
+#   "react-datepicker": "^8.3.0"           // 날짜 선택 컴포넌트
+# }
+#
+# DevDependencies:
+# {
+#   "vite": "^6.3.5",                      // 빌드 도구
+#   "@vitejs/plugin-react": "^4.3.4",      // React Vite 플러그인
+#   "eslint": "^9.22.0",                   // 코드 린팅
+#   "@eslint/js": "^9.22.0",
+#   "eslint-plugin-react-hooks": "^5.2.0",
+#   "eslint-plugin-react-refresh": "^0.4.19"
+# }

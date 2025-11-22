@@ -1,0 +1,144 @@
+/* 글로벌 설정 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: #def1e5;
+}
+
+/* 전체 컨테이너 */
+.LP-container {
+  background-color: #def1e5;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+
+/* 제목 */
+.LP-title {
+  font-size: 3rem;
+  color: white;
+  margin-bottom: 16px;
+  text-align: center;
+  width: 100%;
+}
+
+/* 로고 */
+.LP-logo {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 20px auto;
+  border-radius: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+.id-pw {
+  display: flex;
+  align-items: center;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0px 12px;
+  margin: 10px 0;
+  background-color: white;
+}
+
+.id-pw input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  background: transparent;
+  padding: 0;        /* 인풋 내부 여백 줄임 */
+  height: auto;
+  padding-top: 15px;     /* 텍스트만 아래로 */
+   /* 보조 역할 */
+}
+
+.LP-id,
+.LP-pw {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  object-fit: contain;
+}
+
+
+/* 링크 그룹 */
+.LP-links {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.8rem;
+  color: #555;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.LP-link-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8rem;
+  color: #555;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.LP-link-btn img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+/* 로그인 버튼 (이름 통일 가능: .main-btn) */
+.LP-login-btn {
+  background-color: #eee;
+  padding: 12px 0;
+  width: 100%;
+  border: none;
+  font-size: 1rem;
+  border-radius: 6px;
+  margin: 16px 0;
+  display: block;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* 소셜 아이콘 박스 */
+.LP-social-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* 소셜 버튼 */
+.LP-social-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.LP-social-btn img {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+}

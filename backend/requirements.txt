@@ -1,0 +1,15 @@
+# Node.js 패키지는 package.json에 정의되어 있습니다.
+# npm install을 실행하여 설치하세요.
+
+# package.json 내용:
+# {
+#   "dependencies": {
+#     "express": "^5.1.0",           // 웹 프레임워크
+#     "mysql2": "^3.14.0",           // MySQL 데이터베이스 드라이버
+#     "cors": "^2.8.5",              // CORS 미들웨어
+#     "dotenv": "^16.5.0",           // 환경변수 관리
+#     "bcrypt": "^6.0.0",            // 비밀번호 암호화
+#     "jsonwebtoken": "^9.0.2",      // JWT 토큰 인증
+#     "axios": "^1.9.0"              // HTTP 클라이언트
+#   }
+# }

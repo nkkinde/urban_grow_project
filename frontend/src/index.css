@@ -1,0 +1,30 @@
+/* 기본 reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  font-family: sans-serif;
+  background-color: #def1e5;  
+}
+
+/* 링크 기본 스타일 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 버튼 기본값 제거 */
+button {
+  all: unset;
+  cursor: pointer;
+}
+
+/* 반응형 텍스트 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: normal;
+}
