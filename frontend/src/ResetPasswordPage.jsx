@@ -2,6 +2,7 @@ import React, { useState,useEffect } from "react";
 import "./ResetPasswordPage.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import API_URL from "./api.js";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
- await axios.post(`http://localhost:3000/api/users/reset-password/${userId}`, {
+ await axios.post(`${API_URL}/api/users/reset-password/${userId}`, {
         newPassword,
         confirmPassword,
       });

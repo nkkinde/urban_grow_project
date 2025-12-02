@@ -9,6 +9,7 @@ import navericon from "./assets/naver_icon.png";
 import googleicon from "./assets/google_icon.png";
 import signupicon from "./assets/signup.png";
 import FindIDicon from "./assets/FindID.png";
+import API_URL from "./api.js";
 import FindPWicon from "./assets/FindPW.png";
 import { useNavigate } from "react-router-dom";
 
@@ -20,7 +21,7 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post("http://localhost:3000/api/users/login", {
+      const res = await axios.post(`${API_URL}/api/users/login`, {
         id : id,
         password : password
       });

@@ -3,11 +3,13 @@ import level1Video from "./assets/plant_icon1.mp4";
 import level2Video from "./assets/plant_icon2.mp4";
 import level3Video from "./assets/plant_icon3.mp4";
 import level4Video from "./assets/plant_icon4.mp4";
+import plantWaterVideo from "./assets/plant_water.mp4";
 import { FaUserAlt } from 'react-icons/fa';
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BottomNav from './BottomNav';
+import API_URL, { TTS_URL } from './api.js';
 
 export default function MainPage() {
   const [showMenu, setShowMenu] = useState(false);
@@ -17,43 +19,48 @@ export default function MainPage() {
   const [weatherData, setWeatherData] = useState(null);
   const [lastWatered, setLastWatered] = useState(null);
   const [level, setLevel] = useState(1);
+  
+  // 물주기 팝업
+  const [showWaterPopup, setShowWaterPopup] = useState(false);
+  const waterVideoRef = useRef(null);
+
   // TTS
   const playTTS = async (text) => {
-  try {
-    console.log('🎤 TTS 요청:', text);
-    const res = await fetch("http://localhost:5001/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        speaker_id: 0,  // 여성
-        speed: 1.0      // 기본 속도 추가!
-      }),
-    });
+    try {
+      console.log('🎤 TTS 요청:', text);
+      const res = await fetch(`${TTS_URL}/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          speaker_id: 0,
+          speed: 1.0
+        }),
+      });
 
-    console.log('📡 응답 상태:', res.status);
-    if (!res.ok) {
-      console.error("TTS 서버 에러:", await res.text());
-      return;
+      console.log('📡 응답 상태:', res.status);
+      if (!res.ok) {
+        console.error("TTS 서버 에러:", await res.text());
+        return;
+      }
+
+      const blob = await res.blob();
+      console.log('📦 오디오 크기:', blob.size, 'bytes, 타입:', blob.type);
+      
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      
+      audio.addEventListener('play', () => console.log('▶️ 재생 시작'));
+      audio.addEventListener('error', (e) => console.error('❌ 재생 오류:', e));
+      
+      audio.play().catch(e => console.error('재생 실패:', e));
+      console.log('✅ TTS 재생 명령 전송');
+    } catch (err) {
+      console.error("TTS 호출 실패:", err);
     }
+  };
 
-    const blob = await res.blob();
-    console.log('📦 오디오 크기:', blob.size, 'bytes, 타입:', blob.type);
-    
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    
-    audio.addEventListener('play', () => console.log('▶️ 재생 시작'));
-    audio.addEventListener('error', (e) => console.error('❌ 재생 오류:', e));
-    
-    audio.play().catch(e => console.error('재생 실패:', e));
-    console.log('✅ TTS 재생 명령 전송');
-  } catch (err) {
-    console.error("TTS 호출 실패:", err);
-  }
-};
-
-  //  챗봇 상태
+  // 챗봇 상태
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
@@ -63,7 +70,7 @@ export default function MainPage() {
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  // 유저 인증 및 날씨, 물주기 시간 불러오기
+  // 유저 인증 및 날씨, 물주기 시간 불러오기, 채팅 이력 불러오기
   useEffect(() => {
     const userId = localStorage.getItem("id");
     if (!userId) {
@@ -76,7 +83,7 @@ export default function MainPage() {
       const lat = 37.5665;
       const lon = 126.9780;
       try {
-        const res = await axios.get(`http://localhost:3000/api/weather?lat=${lat}&lon=${lon}`);
+        const res = await axios.get(`${API_URL}/api/weather?lat=${lat}&lon=${lon}`);
         setWeatherData(res.data);
       } catch (err) {
         console.error("날씨 요청 실패:", err);
@@ -85,7 +92,7 @@ export default function MainPage() {
 
     const fetchWateredTime = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/users/last-watered?user_id=${userId}`);
+        const res = await axios.get(`${API_URL}/api/users/last-watered?user_id=${userId}`);
         if (res.data.lastWatered) {
           setLastWatered(new Date(res.data.lastWatered));
         }
@@ -94,8 +101,21 @@ export default function MainPage() {
       }
     };
 
+    // 채팅 이력 불러오기
+    const fetchChatHistory = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/chat/history?user_id=${userId}`);
+        if (res.data.messages && res.data.messages.length > 0) {
+          setMessages(res.data.messages);
+        }
+      } catch (err) {
+        console.error("채팅 이력 조회 실패:", err);
+      }
+    };
+
     fetchWeather();
     fetchWateredTime();
+    fetchChatHistory();
   }, [navigate]);
 
   // 레벨 주기적 조회
@@ -104,25 +124,29 @@ export default function MainPage() {
 
     const fetchLevel = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/users/level?user_id=${userId}`);
+        const res = await axios.get(`${API_URL}/api/users/level?user_id=${userId}`);
         setLevel(res.data.level);
       } catch (err) {
         console.error("레벨 조회 실패:", err);
       }
     };
 
-    fetchLevel(); // 초기 실행
-    const interval = setInterval(fetchLevel, 3000); // 3초마다 갱신
-    return () => clearInterval(interval); // 클린업
+    fetchLevel();
+    const interval = setInterval(fetchLevel, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   // 물주기
   const handleWater = async () => {
+    setShowWaterPopup(true);
+  };
+
+  // 물주기 팝업 완료 처리
+  const handleWaterVideoEnd = async () => {
     const userId = localStorage.getItem("id");
     try {
       const now = new Date();
       
-      // 마지막 물준 시간으로부터 경과 시간 체크 (3시간 = 10800000ms)
       if (lastWatered) {
         const timeDiff = now - lastWatered;
         const THREE_HOURS = 3 * 60 * 60 * 1000;
@@ -133,16 +157,24 @@ export default function MainPage() {
           
           const aiMsg = { sender: "ai", text: warningMsg };
           setMessages((prev) => [...prev, aiMsg]);
+          
+          await axios.post(`${API_URL}/api/chat/save`, {
+            user_id: userId,
+            sender: "ai",
+            text: warningMsg,
+          });
+          
           playTTS(warningMsg);
+          setShowWaterPopup(false);
           return;
         }
       }
 
-      const kstTime = new Date(now.getTime() + 9 * 60 * 60 * 1000); // KST 보정
+      const kstTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
       const formatted = kstTime.toISOString().slice(0, 19).replace("T", " ");
 
       await axios.post(
-        "http://localhost:3000/api/users/water",
+        `${API_URL}/api/users/water`,
         {
           user_id: userId,
           watered_time: formatted,
@@ -154,16 +186,26 @@ export default function MainPage() {
 
       setLastWatered(now);
       
-      // 성공 메시지도 AI 챗봇으로 표시
+      alert("✅ 물주기 완료!");
+      
       const successMsg = `좋습니다! 🌱 ${now.toLocaleTimeString("ko-KR")}에 물을 주었습니다. 다음 물주기는 약 3시간 후에 해주세요.`;
       const aiMsg = { sender: "ai", text: successMsg };
       setMessages((prev) => [...prev, aiMsg]);
+
+      await axios.post(`${API_URL}/api/chat/save`, {
+        user_id: userId,
+        sender: "ai",
+        text: successMsg,
+      });
+      
       playTTS(successMsg);
+      setShowWaterPopup(false);
     } catch (err) {
       console.error("물주기 실패:", err);
       const errorMsg = "물주기 기록에 실패했습니다. 잠시 후 다시 시도해 주세요.";
       const aiMsg = { sender: "ai", text: errorMsg };
       setMessages((prev) => [...prev, aiMsg]);
+      setShowWaterPopup(false);
     }
   };
 
@@ -179,43 +221,55 @@ export default function MainPage() {
     return level1Video;
   };
 
-  // 🔹 AI 챗봇 전송
+  // AI 챗봇 전송
   const handleSendChat = async (e) => {
-  e.preventDefault();
-  const trimmed = chatInput.trim();
-  if (!trimmed || isSending) return;
+    e.preventDefault();
+    const trimmed = chatInput.trim();
+    if (!trimmed || isSending) return;
 
-  const userMsg = { sender: "user", text: trimmed };
-  setMessages((prev) => [...prev, userMsg]);
-  setChatInput("");
-  setIsSending(true);
+    const userId = localStorage.getItem("id");
+    const userMsg = { sender: "user", text: trimmed };
+    setMessages((prev) => [...prev, userMsg]);
+    setChatInput("");
+    setIsSending(true);
 
-  try {
-    const res = await axios.post("http://localhost:3000/api/chat", {
-      message: trimmed,
-    });
+    try {
+      await axios.post(`${API_URL}/api/chat/save`, {
+        user_id: userId,
+        sender: "user",
+        text: trimmed,
+      });
 
-    const replyText = res.data.reply || "응답을 불러오지 못했어요 😢";
+      const res = await axios.post(`${API_URL}/api/chat`, {
+        message: trimmed,
+      });
 
-    const aiMsg = { sender: "ai", text: replyText };
-    setMessages((prev) => [...prev, aiMsg]);
+      const replyText = res.data.reply || "응답을 불러오지 못했어요 😢";
 
-    // 🔊 여기서 TTS 재생
-    playTTS(replyText);
-  } catch (error) {
-    console.error("채팅 전송 실패:", error);
-    setMessages((prev) => [
-      ...prev,
-      {
+      const aiMsg = { sender: "ai", text: replyText };
+      setMessages((prev) => [...prev, aiMsg]);
+
+      await axios.post(`${API_URL}/api/chat/save`, {
+        user_id: userId,
         sender: "ai",
-        text: "서버와 통신 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요 🙏",
-      },
-    ]);
-  } finally {
-    setIsSending(false);
-  }
-};
+        text: replyText,
+      });
 
+      playTTS(replyText);
+    } catch (error) {
+      console.error("채팅 전송 실패:", error);
+      const errorMsg = "서버와 통신 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요 🙏";
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: errorMsg,
+        },
+      ]);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   // 외부 클릭 시 메뉴 닫기
   useEffect(() => {
@@ -230,40 +284,40 @@ export default function MainPage() {
 
   return (
     <div className="main-container">
-      {/* 상단바 */}
-      <div className="top-bar">
+      {/* 상단 헤더 */}
+      <div className="mainpage-header">
         <button
           className="profile-button"
           onClick={() => setShowMenu((prev) => !prev)}
         >
           <FaUserAlt size={20} color="#4a7c59" />
         </button>
-        {showMenu && (
-          <div className="dropdown-menu" ref={menuRef}>
-            <p className="greeting">
-              어서오세요<br />
-              <strong>{localStorage.getItem("nickname") || "사용자"}</strong> 님
-            </p>
-            <hr />
-            <div className="menu-item">
-              <div className="menu-label">🔔 알림</div>
-            </div>
-            <div className="menu-item">📊 랭크</div>
-            <div className="menu-item">
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/');
-                }}
-              >
-                🔓 로그아웃
-              </button>
-            </div>
-          </div>
-        )}
+        <h2 className="mainpage-header-title">메인 페이지</h2>
       </div>
 
-      <h1 className="mainpage-title">UrbanGrow</h1>
+      {/* 프로필 드롭다운 메뉴 (헤더 밖) */}
+      {showMenu && (
+        <div className="dropdown-menu" ref={menuRef}>
+          <p className="greeting">
+            어서오세요<br />
+            <strong>{localStorage.getItem("nickname") || "사용자"}</strong> 님
+          </p>
+          <hr />
+          <div className="menu-item">
+            <button onClick={() => navigate('/notifications')}>🔔 알림</button>
+          </div>
+          <div className="menu-item">
+            <button
+              onClick={() => {
+                localStorage.clear();
+                navigate('/');
+              }}
+            >
+              🔓 로그아웃
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 날씨 */}
       <div className="icon-group">
@@ -290,7 +344,7 @@ export default function MainPage() {
         <div>🌱 40%</div>
       </div>
 
-      {/* 🔹 AI 챗봇 영역 (물주기 버튼 위) */}
+      {/* AI 챗봇 영역 */}
       <div className="chat-container">
         <div className="chat-messages">
           {messages.map((msg, idx) => (
@@ -329,6 +383,21 @@ export default function MainPage() {
           </p>
         )}
       </div>
+
+      {/* 물주기 팝업 */}
+      {showWaterPopup && (
+        <div className="water-popup-overlay" onClick={() => setShowWaterPopup(false)}>
+          <div className="water-popup" onClick={(e) => e.stopPropagation()}>
+            <video
+              ref={waterVideoRef}
+              src={plantWaterVideo}
+              autoPlay
+              onEnded={handleWaterVideoEnd}
+              style={{ width: "100%", borderRadius: "8px" }}
+            />
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

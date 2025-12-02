@@ -1,11 +1,16 @@
 {
-  "name": "urban-grow-dev",
+  "name": "urban-grow",
+  "version": "1.0.0",
+  "description": "UrbanGrow - 식물 관리 애플리케이션",
+  "author": "UrbanGrow Team",
+  "main": "main.js",
   "private": true,
   "scripts": {
     "frontend": "cd frontend && npm run dev",
     "backend": "cd backend && node app.js",
-    "tts": "cd tts && uvicorn app:app --host 0.0.0.0 --port 5001 --reload",
-    "dev": "concurrently \"npm run frontend\" \"npm run backend\" \"npm run tts\""
+    "tts": "cd TTS && .venv\\Scripts\\uvicorn app:app --host 0.0.0.0 --port 5001 --reload",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\" \"npm run tts\"",
+    "build-frontend": "cd frontend && npm run build"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

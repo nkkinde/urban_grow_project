@@ -2,6 +2,7 @@ import React, { useState,useEffect } from "react";
 import "./Withdrawal.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "./api.js";
 
 function Withdrawal() {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ function Withdrawal() {
 
   const handleWithdraw = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/users/${userId}`);
+      await axios.delete(`${API_URL}/api/users/${userId}`);
       alert("회원 탈퇴가 완료되었습니다.");
       localStorage.clear(); // 모든 로그인 정보 제거
       navigate("/"); // 로그인 페이지 등으로 이동

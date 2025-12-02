@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./FindPasswordPage.css";
+import API_URL from "./api.js";
 
 export default function FindPasswordPage() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function FindPasswordPage() {
 
   const handleVerify = async () => {
     try {
-await axios.post("http://localhost:3000/api/users/find-password", form);
+await axios.post(`${API_URL}/api/users/find-password`, form);
       alert("인증 성공! 비밀번호를 재설정해주세요.");
       navigate("/reset-password", { state: { id: form.id } }); // id 전달
     } catch (err) {

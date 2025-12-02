@@ -3,6 +3,7 @@ import "./NicknameChange.css";
 import { useNavigate } from "react-router-dom";
 import { useUserNickname } from "./UserNickname";
 import axios from "axios";
+import API_URL from "./api.js";
 
 function NicknameChange() {
   useEffect(() => {
@@ -23,7 +24,7 @@ function NicknameChange() {
 
     try {
       // 서버에 닉네임 업데이트 요청
-      await axios.put("http://localhost:3000/api/users/nickname-change", {
+      await axios.put(`${API_URL}/api/users/nickname-change`, {
         user_nickname,
         nickname: newNickname,
       });

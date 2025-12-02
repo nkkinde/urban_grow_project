@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./SignupPage.css";
 import axios from "axios"; // axios 설치 필요: npm install axios
 import { useNavigate } from "react-router-dom";
+import API_URL from "./api.js";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/api/users/register", form);
+      const response = await axios.post(`${API_URL}/api/users/register`, form);
       alert(response.data.message || "회원가입 완료!");
       navigate("/");
     } catch (error) {

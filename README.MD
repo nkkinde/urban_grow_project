@@ -148,6 +148,12 @@ mysql -u root -p
 
 ---
 
+### 5. 통합 실행
+```
+npm run dev
+
+```
+---
 ## API 엔드포인트
 
 ### 인증 API
@@ -284,12 +290,6 @@ GEMINI_API_KEY=your_gemini_api_key
 3. 변경사항 커밋: `git commit -m 'Add some AmazingFeature'`
 4. 브랜치 Push: `git push origin feature/AmazingFeature`
 5. Pull Request 생성
-
----
-
-## 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 있습니다.
 
 ---
 

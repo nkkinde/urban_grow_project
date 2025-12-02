@@ -101,15 +101,31 @@ html, body {
   align-items: center;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
-  width: 100%; /* 버튼 가로 정렬 */
+  transition: all 0.2s ease;
+  width: 100%;
   box-sizing: border-box;
 }
 
-
-/* 메뉴 항목 띄울 시 색상 변경 */
+/* 메뉴 항목 호버 상태 */
 .menu-item:hover {
   background-color: #a0d8a0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 디바이스 연결 버튼 호버 상태 */
+.device-connect-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* 회원 탈퇴 버튼 특수 스타일 */
+.withdrawal-btn {
+  background-color: #ffd4d4;
+}
+
+.withdrawal-btn:hover {
+  background-color: #ffb8b8;
 }
 
 /* 오른쪽 화살표 */

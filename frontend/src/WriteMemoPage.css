@@ -6,6 +6,7 @@
   font-family: sans-serif;
   max-width: 390px;
   margin: 0 auto;
+  padding-bottom: 100px;
 }
 
 .write-title {
@@ -17,7 +18,7 @@
 
 .memo-textarea {
   width: 100%;
-  height: 300px;
+  height: 250px;
   padding: 16px;
   border-radius: 12px;
   border: 2px solid #a5d6a7;
@@ -26,21 +27,120 @@
   line-height: 1.5;
   background-color: white;
   box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+/* 이미지 업로드 섹션 */
+.image-upload-section {
+  background-color: #e8f5e9;
+  border: 2px dashed #a5d6a7;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-upload-section:hover {
+  border-color: #4caf50;
+  background-color: #d1fadf;
+}
+
+.image-upload-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d5a3d;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.image-input {
+  display: none;
+}
+
+.image-hint {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+/* 이미지 미리보기 섹션 */
+.image-preview-section {
+  margin-bottom: 16px;
+}
+
+.preview-title {
+  font-size: 0.95rem;
+  color: #2d5a3d;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.image-preview-item {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #e53935;
+}
+
+.remove-image-btn:hover {
+  background-color: #e53935;
+  color: white;
+  transform: scale(1.1);
 }
 
 .button-group {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   margin-top: 20px;
 }
 
 .save-button,
 .cancel-button {
-  padding: 10px 20px;
+  flex: 1;
+  padding: 12px 20px;
   border-radius: 10px;
   border: none;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .save-button {
@@ -48,7 +148,19 @@
   color: white;
 }
 
+.save-button:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
 .cancel-button {
-  background-color: #ccc;
+  background-color: #e0e0e0;
   color: #333;
+}
+
+.cancel-button:hover {
+  background-color: #d0d0d0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

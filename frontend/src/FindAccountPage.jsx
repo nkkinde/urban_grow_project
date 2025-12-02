@@ -4,6 +4,7 @@ import axios from "axios";
 import "./FindAccountPage.css";
 import nameicon from "./assets/name_icon.png";
 import phonenumbericon from "./assets/phonenumber_icon.png";
+import API_URL from "./api.js";
 
 export default function FindAccountPage() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function FindAccountPage() {
 
   const handleFindId = async () => {
     try {
-      const res = await axios.post("http://localhost:3000/api/users/find-id", form);
+      const res = await axios.post(`${API_URL}/api/users/find-id`, form);
       const foundId = res.data.id;
       navigate("/id-result", { state: { id: foundId } });
     } catch (err) {
