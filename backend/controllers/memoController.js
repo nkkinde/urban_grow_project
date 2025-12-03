@@ -4,9 +4,9 @@ const fs = require('fs');
 
 // 레벨 계산 함수
 const calculateLevel = (count) => {
-  if (count >= 9) return 4;
-  if (count >= 6) return 3;
-  if (count >= 3) return 2;
+  if (count >= 3) return 4;
+  if (count >= 2) return 3;
+  if (count >= 1) return 2;
   return 1;
 };
 
@@ -103,12 +103,22 @@ exports.saveOrUpdateMemo = (req, res) => {
               if (!err && rows.length > 0) {
                 const newLevel = calculateLevel(rows[0].diary_count);
                 db.query(levelSql, [newLevel, user_id]);
+                // 새 레벨을 포함하여 응답
+                res.status(201).json({ 
+                  message: '메모 저장 성공!', 
+                  isNew: true,
+                  memoCount: rows[0].diary_count
+                });
+              } else {
+                res.status(201).json({ 
+                  message: '메모 저장 성공!', 
+                  isNew: true,
+                  memoCount: 0
+                });
               }
             });
           }
         });
-
-        res.status(201).json({ message: '메모 저장 성공!', isNew: true });
       });
     }
   });

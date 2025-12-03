@@ -69,6 +69,11 @@ export default function MainPage() {
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [showImageAnalysis, setShowImageAnalysis] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const fileInputRef = useRef(null);
 
   // 유저 인증 및 날씨, 물주기 시간 불러오기, 채팅 이력 불러오기
   useEffect(() => {
@@ -271,6 +276,86 @@ export default function MainPage() {
     }
   };
 
+  // 이미지 선택 핸들러
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('이미지 크기는 10MB 이하여야 합니다.');
+      return;
+    }
+
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target?.result);
+    reader.readAsDataURL(file);
+  };
+
+  // 이미지 분석 요청
+  const handleAnalyzeImage = async () => {
+    if (!selectedImage) return;
+
+    setIsAnalyzing(true);
+    const userId = localStorage.getItem("id");
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+
+      const response = await axios.post(`${API_URL}/api/chat/analyze-image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const analysis = response.data.analysis;
+      const imageUrl = response.data.imageUrl;
+      
+      // 사용자가 업로드한 이미지 메시지 추가
+      const userImageMsg = { sender: 'user', imageUrl, text: '[식물 사진 업로드]' };
+      setMessages((prev) => [...prev, userImageMsg]);
+      
+      // AI 분석 결과 메시지 추가
+      const aiMsg = { sender: 'ai', text: analysis };
+      setMessages((prev) => [...prev, aiMsg]);
+      
+      // 채팅 기록에 저장 - 사용자 이미지 메시지
+      await axios.post(`${API_URL}/api/chat/save`, {
+        user_id: userId,
+        sender: 'user',
+        text: imageUrl,
+        imageUrl: imageUrl,
+      });
+      
+      // 채팅 기록에 저장 - AI 분석 결과
+      await axios.post(`${API_URL}/api/chat/save`, {
+        user_id: userId,
+        sender: 'ai',
+        text: analysis,
+      });
+      
+      // TTS로 재생
+      playTTS(analysis);
+      
+      // 모달 닫기 및 상태 초기화
+      setShowImageAnalysis(false);
+      setSelectedImage(null);
+      setImagePreview(null);
+    } catch (error) {
+      console.error('이미지 분석 실패:', error);
+      const errorMsg = '식물 이미지 분석에 실패했습니다. 다시 시도해주세요.';
+      const aiMsg = { sender: 'ai', text: errorMsg };
+      setMessages((prev) => [...prev, aiMsg]);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // 이미지 분석 취소
+  const handleCancelImageAnalysis = () => {
+    setShowImageAnalysis(false);
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
   // 외부 클릭 시 메뉴 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -331,6 +416,12 @@ export default function MainPage() {
         <strong>{localStorage.getItem("nickname")}</strong>
       </div>
 
+      {/* 레벨 표시 */}
+      <div className="level-display">
+        <span className="level-label">Level</span>
+        <span className="level-value">{level}</span>
+      </div>
+
       {/* 식물 성장 영상 */}
       <div className="video-wrapper">
         <video key={level} muted autoPlay loop playsInline>
@@ -352,12 +443,27 @@ export default function MainPage() {
               key={idx}
               className={`chat-bubble ${msg.sender === 'user' ? 'user' : 'ai'}`}
             >
+              {msg.imageUrl && (
+                <img 
+                  src={`${API_URL}${msg.imageUrl}`} 
+                  alt="식물 사진" 
+                  className="chat-image"
+                />
+              )}
               {msg.text}
             </div>
           ))}
         </div>
 
         <form className="chat-input-area" onSubmit={handleSendChat}>
+          <button 
+            type="button"
+            className="image-analysis-button"
+            onClick={() => setShowImageAnalysis(true)}
+            title="식물 사진으로 진단 받기"
+          >
+            📸
+          </button>
           <input
             type="text"
             className="chat-input"
@@ -370,6 +476,66 @@ export default function MainPage() {
             {isSending ? '생각 중…' : '전송'}
           </button>
         </form>
+
+        {/* 이미지 분석 모달 */}
+        {showImageAnalysis && (
+          <div className="image-analysis-overlay" onClick={handleCancelImageAnalysis}>
+            <div className="image-analysis-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="image-analysis-header">
+                <h3>식물 사진으로 진단 받기</h3>
+                <button 
+                  className="close-button"
+                  onClick={handleCancelImageAnalysis}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {!imagePreview ? (
+                <div className="image-upload-area">
+                  <button 
+                    className="upload-button"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    📷 사진 선택하기
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    style={{ display: 'none' }}
+                  />
+                  <p className="upload-hint">
+                    식물의 잎, 줄기, 전체 모습 등을 선명하게 찍어주세요
+                  </p>
+                </div>
+              ) : (
+                <div className="image-preview-section">
+                  <img src={imagePreview} alt="선택된 식물 사진" className="preview-image" />
+                  <div className="image-actions">
+                    <button 
+                      className="cancel-image-button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setSelectedImage(null);
+                      }}
+                    >
+                      다시 선택
+                    </button>
+                    <button 
+                      className="analyze-button"
+                      onClick={handleAnalyzeImage}
+                      disabled={isAnalyzing}
+                    >
+                      {isAnalyzing ? '분석 중...' : '식물 진단 시작'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 물주기 버튼 */}

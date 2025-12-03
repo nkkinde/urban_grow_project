@@ -24,6 +24,7 @@ const createChatHistoryTable = `
     user_id VARCHAR(255) NOT NULL,
     message LONGTEXT,
     reply LONGTEXT,
+    image_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
     INDEX idx_created_at (created_at)

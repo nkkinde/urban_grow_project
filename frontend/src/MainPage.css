@@ -191,11 +191,40 @@ video, img {
   object-fit: contain;
 }
 
+/* 레벨 표시 */
+.level-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 10px 0;
+  padding: 8px 16px;
+  background-color: rgba(74, 124, 89, 0.1);
+  border-radius: 20px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.level-label {
+  font-size: 1rem;
+  color: #4a7c59;
+  font-weight: 600;
+}
+
+.level-value {
+  font-size: 1.5rem;
+  color: #4a7c59;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+
 .roomindoor-temperature {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 5px;
   margin-bottom: 16px;
 }
 
@@ -233,6 +262,17 @@ video, img {
   font-size: 0.9rem;
   line-height: 1.4;
   word-break: keep-all;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 채팅 이미지 스타일 */
+.chat-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
 /* AI 말풍선 – 진한 초록 + 흰색 글자 */
@@ -376,4 +416,202 @@ video, img {
   border-radius: 8px;
   width: 80px;
   height: 80px;
+}
+
+/* 이미지 분석 버튼 */
+.image-analysis-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.image-analysis-button:hover {
+  transform: scale(1.1);
+}
+
+.image-analysis-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 이미지 분석 오버레이 */
+.image-analysis-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+/* 이미지 분석 모달 */
+.image-analysis-modal {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.image-analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.image-analysis-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #2d5a3d;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background-color: #f0f0f0;
+  border-radius: 50%;
+}
+
+/* 이미지 업로드 영역 */
+.image-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 0;
+  text-align: center;
+}
+
+.upload-button {
+  background-color: #4a7c59;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: background-color 0.2s;
+}
+
+.upload-button:hover {
+  background-color: #3d6447;
+}
+
+.upload-button:active {
+  transform: scale(0.98);
+}
+
+.upload-hint {
+  color: #999;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* 이미지 미리보기 */
+.image-preview-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.cancel-image-button,
+.analyze-button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-image-button {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.cancel-image-button:hover {
+  background-color: #e0e0e0;
+}
+
+.analyze-button {
+  background-color: #4a7c59;
+  color: white;
+  font-weight: 600;
+}
+
+.analyze-button:hover:not(:disabled) {
+  background-color: #3d6447;
+}
+
+.analyze-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.analyze-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* 채팅 입력 영역 스타일 조정 */
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.chat-input {
+  flex: 1;
 }

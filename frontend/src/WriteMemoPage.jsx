@@ -14,6 +14,8 @@ export default function WriteMemoPage() {
   const [images, setImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
+  const [showLevelUpPopup, setShowLevelUpPopup] = useState(false);
+  const [newLevel, setNewLevel] = useState(null);
 
   useEffect(() => {
     if (!user_id || !date) {
@@ -41,6 +43,7 @@ export default function WriteMemoPage() {
         }
       } catch (err) {
         if (err.response?.status === 404) {
+          // 새 메모 작성 - 기존 메모가 없는 것이 정상
           try {
             const weatherRes = await axios.get(
               `${API_URL}/api/weather?lat=37.5665&lon=126.9780`
@@ -52,8 +55,8 @@ export default function WriteMemoPage() {
           } catch {
             setMemo("야외날씨: 정보 없음\n실내환경: 24℃, 45%\n\n");
           }
-        } else {
-          alert("서버 오류");
+        } else if (err.response?.status) {
+          alert("서버 오류가 발생했습니다.");
         }
       }
     };
@@ -120,9 +123,19 @@ export default function WriteMemoPage() {
         }
       );
 
+      // 새로운 메모 저장 시 레벨업 확인
       if (!isEdit && res.data.isNew) {
         const currentLevel = parseInt(localStorage.getItem("level")) || 1;
-        localStorage.setItem("level", currentLevel + 1);
+        const memoCount = res.data.memoCount || 0;
+        const calculatedLevel = memoCount + 1; // 0개=1레벨, 1개=2레벨 등
+        
+        // 레벨이 증가했으면 팝업 표시
+        if (calculatedLevel > currentLevel) {
+          setNewLevel(calculatedLevel);
+          localStorage.setItem("level", calculatedLevel);
+          setShowLevelUpPopup(true);
+          return; // 팝업 확인 후 네비게이션
+        }
       }
 
       alert(isEdit ? "메모 수정 완료!" : "메모 저장 완료!");
@@ -130,6 +143,12 @@ export default function WriteMemoPage() {
     } catch (err) {
       alert("메모 저장 실패: " + err.response?.data?.message);
     }
+  };
+
+  const handleLevelUpConfirm = () => {
+    setShowLevelUpPopup(false);
+    alert("메모 저장 완료!");
+    navigate("/plant-diary");
   };
 
   return (
@@ -210,6 +229,25 @@ export default function WriteMemoPage() {
           취소
         </button>
       </div>
+
+      {/* 레벨업 팝업 */}
+      {showLevelUpPopup && (
+        <div className="levelup-overlay" onClick={handleLevelUpConfirm}>
+          <div className="levelup-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="levelup-header">
+              <span className="levelup-icon">🎉</span>
+            </div>
+            <h2 className="levelup-title">레벨 업!</h2>
+            <p className="levelup-text">
+              축하합니다! 당신의 식물이<br />
+              <strong>Level {newLevel}</strong>로 성장했어요!
+            </p>
+            <button className="levelup-button" onClick={handleLevelUpConfirm}>
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
