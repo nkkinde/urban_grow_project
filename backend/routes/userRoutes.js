@@ -8,8 +8,10 @@ router.post('/register', userController.registerUser);
 router.post('/login',    userController.loginUser);
 // 비밀번호 찾기
 router.post('/find-password',  userController.findPasswordUser);
-// 비밀번호 재설정
+// 비밀번호 재설정 (비로그인 상태)
 router.post('/reset-password/:id', userController.resetPassword);
+// 비밀번호 변경 (로그인 상태)
+router.post('/change-password', userController.changePassword);
 // 아이디 찾기
 router.post('/find-id',userController.findId);
 // 닉네임 변경

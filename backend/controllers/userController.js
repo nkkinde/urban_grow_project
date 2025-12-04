@@ -1,12 +1,15 @@
-const db     = require('../db');
+const db = require('../db');
 const bcrypt = require('bcrypt');
-const jwt = require("jsonwebtoken");
 
+// ========================================
 // 회원가입
+// ========================================
 exports.registerUser = async (req, res) => {
-  const { id, password, name, nickname, phone_number } = req.body;
-  if (!id || !password || !name || !nickname || !phone_number) {
-    return res.status(400).json({ message: '모든 항목을 입력해주세요.' });
+  const { id, email, password, nickname, phone_number } = req.body;
+
+  // 필수 항목 검증
+  if (!id || !email || !password || !nickname) {
+    return res.status(400).json({ message: '아이디, 이메일, 비밀번호, 닉네임은 필수항목입니다.' });
   }
 
   try {
@@ -14,207 +17,334 @@ exports.registerUser = async (req, res) => {
     const hashedPW = await bcrypt.hash(password, saltRounds);
 
     const sql = `
-      INSERT INTO users (id, password, name, nickname, phone_number)
+      INSERT INTO users (id, email, password, nickname, phone_number)
       VALUES (?, ?, ?, ?, ?)
     `;
-    const values = [id, hashedPW, name, nickname, phone_number];
+    await db.promise().query(sql, [id, email, hashedPW, nickname, phone_number || null]);
 
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.error("DB 삽입 오류:", err);
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(409).json({ message: '이미 사용 중인 ID입니다.' });
-        }
-        return res.status(500).json({ message: '서버 에러', error: err });
-      }
-      return res.status(201).json({ message: '회원가입 성공!' });
-    });
-
-  } catch (e) {
-    console.error("비밀번호 해싱 오류:", e);
-    return res.status(500).json({ message: '비밀번호 처리 중 에러', error: e });
+    return res.status(201).json({ message: '회원가입 성공!' });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: '이미 사용 중인 ID 또는 이메일입니다.' });
+    }
+    console.error('회원가입 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
   }
 };
 
+// ========================================
+// 로그인
+// ========================================
 exports.loginUser = async (req, res) => {
   const { id, password } = req.body;
 
-  const sql = 'SELECT * FROM users WHERE id = ?';
-  db.query(sql, [id], async (err, result) => {
-    if (err) return res.status(500).json({ message: '서버 오류' });
-    if (result.length === 0) return res.status(404).json({ message: '존재하지 않는 아이디입니다.' });
+  if (!id || !password) {
+    return res.status(400).json({ message: '아이디와 비밀번호를 입력해주세요.' });
+  }
 
-    const user = result[0]; // 이 줄로 user 정의
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ message: '비밀번호가 틀렸습니다.' });
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT id, password, nickname FROM users WHERE id = ?',
+      [id]
+    );
 
-    // 이제 user.id 사용 가능
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    if (rows.length === 0) {
+      return res.status(401).json({ message: '존재하지 않는 아이디입니다.' });
+    }
 
-    res.status(200).json({
-      message: "로그인 성공!",
-      token,
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: '비밀번호가 틀렸습니다.' });
+    }
+
+    return res.status(200).json({
+      message: '로그인 성공!',
       user: {
         id: user.id,
         nickname: user.nickname
       }
     });
-  });
+  } catch (err) {
+    console.error('로그인 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
 };
 
+// ========================================
+// 비밀번호 찾기 (인증)
+// ========================================
+exports.findPasswordUser = async (req, res) => {
+  const { id, email } = req.body;
 
-// 비밀번호 찾기
-exports.findPasswordUser = (req, res) => {
-  const { id, name } = req.body;
-  if (!id || !name) {
-    return res.status(400).json({ message: '아이디와 이름을 모두 입력해주세요.' });
-  }
-
-  const sql = 'SELECT id FROM users WHERE id = ? AND name = ?';
-  db.query(sql, [id, name], (err, rows) => {
-    if (err) return res.status(500).json({ message: '서버 에러', error: err });
-    if (rows.length === 0) {
-      return res.status(404).json({ message: '일치하는 회원 정보가 없습니다.' });
-    }
-    res.status(200).json({ message: '인증 성공' });
-  });
-};
-
-// 비밀번호 재설정
-exports.resetPassword = async (req, res) => {
-  const id = req.params.id;
-  const { newPassword, confirmPassword } = req.body;
-
-  if (!newPassword || !confirmPassword) {
-    return res.status(400).json({ message: '새 비밀번호와 확인을 모두 입력해주세요.' });
-  }
-
-  if (newPassword !== confirmPassword) {
-    return res.status(400).json({ message: '비밀번호와 확인이 일치하지 않습니다.' });
+  if (!id || !email) {
+    return res.status(400).json({ message: '아이디와 이메일을 입력해주세요.' });
   }
 
   try {
-    const hashed = await bcrypt.hash(newPassword, 10);
-    const sql = 'UPDATE users SET password = ? WHERE id = ?';
-    db.query(sql, [hashed, id], (err, result) => {
-      if (err) {
-        return res.status(500).json({ message: '서버 에러', error: err });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: '회원 정보를 찾을 수 없습니다.' });
-      }
-      res.status(200).json({ message: '비밀번호 재설정 성공!' });
-    });
-  } catch (e) {
-    res.status(500).json({ message: '서버 에러', error: e });
-  }
-};
+    const [rows] = await db.promise().query(
+      'SELECT id FROM users WHERE id = ? AND email = ?',
+      [id, email]
+    );
 
-// 아이디 찾기
-exports.findId = (req, res) => {
-  const { name, nickname, phone_number } = req.body;
-
-  if (!name || !nickname || !phone_number) {
-    return res.status(400).json({ message: '이름, 닉네임, 전화번호를 모두 입력해주세요.' });
-  }
-
-  const sql = `
-    SELECT id
-      FROM users
-     WHERE name     = ?
-       AND nickname = ?
-       AND phone_number = ?
-    LIMIT 1
-  `;
-  db.query(sql, [name, nickname, phone_number], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ message: '서버 에러', error: err });
-    }
     if (rows.length === 0) {
       return res.status(404).json({ message: '일치하는 회원 정보가 없습니다.' });
     }
 
-    const foundId = rows[0].id;
-    res.status(200).json({ message: '아이디 찾기 성공', id: foundId });
-  });
+    return res.status(200).json({ message: '인증 성공' });
+  } catch (err) {
+    console.error('비밀번호 찾기 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
 };
-// 닉네임 변경
-exports.nicknameChange = (req, res) => {
-  const { user_nickname, nickname } = req.body;
 
-  if (!user_nickname || !nickname) {
-    return res.status(400).json({ message: '기존 닉네임 또는 새 닉네임이 누락되었습니다.' });
+// ========================================
+// 비밀번호 재설정
+// ========================================
+exports.resetPassword = async (req, res) => {
+  const { id } = req.params;
+  const { newPassword, confirmPassword } = req.body;
+
+  if (!newPassword || !confirmPassword) {
+    return res.status(400).json({ message: '새 비밀번호를 입력해주세요.' });
   }
 
-  const sql = 'UPDATE users SET nickname = ? WHERE nickname = ?';
-  db.query(sql, [nickname, user_nickname], (err, result) => {
-    if (err) {
-      console.error('DB 오류:', err);
-      return res.status(500).json({ message: 'DB 오류 발생', error: err });
-    }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ message: '비밀번호가 일치하지 않습니다.' });
+  }
+
+  try {
+    const hashedPW = await bcrypt.hash(newPassword, 10);
+    const [result] = await db.promise().query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [hashedPW, id]
+    );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: '해당 닉네임의 사용자를 찾을 수 없습니다.' });
+      return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+    }
+
+    return res.status(200).json({ message: '비밀번호 재설정 성공!' });
+  } catch (err) {
+    console.error('비밀번호 재설정 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
+};
+
+// ========================================
+// 아이디 찾기
+// ========================================
+exports.findId = async (req, res) => {
+  const { email, nickname } = req.body;
+
+  if (!email || !nickname) {
+    return res.status(400).json({ message: '이메일과 닉네임을 입력해주세요.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT id FROM users WHERE email = ? AND nickname = ?',
+      [email, nickname]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: '일치하는 회원 정보가 없습니다.' });
+    }
+
+    return res.status(200).json({
+      message: '아이디 찾기 성공',
+      id: rows[0].id
+    });
+  } catch (err) {
+    console.error('아이디 찾기 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
+};
+
+// ========================================
+// 비밀번호 변경 (현재 비밀번호 확인 후 변경)
+// ========================================
+exports.changePassword = async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body;
+
+  if (!userId || !currentPassword || !newPassword) {
+    return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
+  }
+
+  try {
+    // 현재 사용자 조회
+    const [rows] = await db.promise().query(
+      'SELECT password FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 현재 비밀번호 확인
+    const isMatch = await bcrypt.compare(currentPassword, rows[0].password);
+    if (!isMatch) {
+      return res.status(401).json({ message: '현재 비밀번호가 틀렸습니다.' });
+    }
+
+    // 새 비밀번호 해싱
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 비밀번호 업데이트
+    await db.promise().query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [hashedPassword, userId]
+    );
+
+    return res.status(200).json({ message: '비밀번호가 성공적으로 변경되었습니다!' });
+  } catch (err) {
+    console.error('비밀번호 변경 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
+};
+
+// ========================================
+// 닉네임 변경
+// ========================================
+exports.nicknameChange = async (req, res) => {
+  const { userId, newNickname } = req.body;
+
+  if (!userId || !newNickname) {
+    return res.status(400).json({ message: '사용자 ID와 새 닉네임을 입력해주세요.' });
+  }
+
+  try {
+    const [result] = await db.promise().query(
+      'UPDATE users SET nickname = ? WHERE id = ?',
+      [newNickname, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '해당 사용자를 찾을 수 없습니다.' });
     }
 
     return res.status(200).json({ message: '닉네임 변경 성공!' });
-  });
+  } catch (err) {
+    console.error('닉네임 변경 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
 };
 
-// 아이디 삭제
-exports.deleteUser = (req, res) => {
+// ========================================
+// 사용자 탈퇴
+// ========================================
+exports.deleteUser = async (req, res) => {
   const { id } = req.params;
-  const sql = "DELETE FROM users WHERE id = ?";
-  db.query(sql, [id], (err, result) => {
-    if (err) return res.status(500).json({ message: "DB 오류", err });
-    if (result.affectedRows === 0) return res.status(404).json({ message: "사용자 없음" });
-    res.status(200).json({ message: "탈퇴 성공" });
-  });
+
+  if (!id) {
+    return res.status(400).json({ message: '사용자 ID가 필요합니다.' });
+  }
+
+  try {
+    const [result] = await db.promise().query(
+      'DELETE FROM users WHERE id = ?',
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '해당 사용자를 찾을 수 없습니다.' });
+    }
+
+    return res.status(200).json({ message: '탈퇴 완료' });
+  } catch (err) {
+    console.error('사용자 탈퇴 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
 };
 
-// 유저 레벨 조회
-exports.getUserLevel = (req, res) => {
+// ========================================
+// 사용자 레벨 조회
+// ========================================
+exports.getUserLevel = async (req, res) => {
   const { user_id } = req.query;
+
   if (!user_id) {
     return res.status(400).json({ message: 'user_id가 필요합니다.' });
   }
 
-  const sql = 'SELECT level FROM users WHERE id = ?';
-  db.query(sql, [user_id], (err, rows) => {
-    if (err) return res.status(500).json({ message: 'DB 조회 오류', error: err });
-    if (rows.length === 0) return res.status(404).json({ message: '사용자 없음' });
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT level, nickname FROM users WHERE id = ?',
+      [user_id]
+    );
 
-    res.status(200).json({ level: rows[0].level });
-  });
+    if (rows.length === 0) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    return res.status(200).json({
+      level: rows[0].level,
+      nickname: rows[0].nickname
+    });
+  } catch (err) {
+    console.error('레벨 조회 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
 };
 
-// 물주기 기록 (마지막 물준 시간 업데이트)
-exports.updateLastWatered = (req, res) => {
-  const { user_id, watered_time } = req.body;
-  if (!user_id || !watered_time) {
-    return res.status(400).json({ message: 'user_id와 watered_time이 필요합니다.' });
+// ========================================
+// 물 주기 기록 업데이트
+// ========================================
+exports.updateLastWatered = async (req, res) => {
+  const { user_id, userId, watered_time, wateredTime } = req.body;
+  
+  // 두 가지 형식 모두 지원 (user_id 또는 userId, watered_time 또는 wateredTime)
+  const id = user_id || userId;
+  const time = watered_time || wateredTime;
+
+  if (!id || !time) {
+    return res.status(400).json({ message: '사용자 ID와 물준 시간이 필요합니다.' });
   }
 
-  const sql = 'UPDATE users SET last_watered = ? WHERE id = ?';
-  db.query(sql, [watered_time, user_id], (err) => {
-    if (err) return res.status(500).json({ message: '업데이트 실패', error: err });
-    res.status(200).json({ message: '물주기 기록 완료' });
-  });
+  try {
+    const [result] = await db.promise().query(
+      'UPDATE users SET last_watered = ? WHERE id = ?',
+      [time, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    return res.status(200).json({ message: '물 주기 기록 완료' });
+  } catch (err) {
+    console.error('물 주기 업데이트 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
 };
 
+// ========================================
 // 마지막 물준 시간 조회
-exports.getLastWatered = (req, res) => {
+// ========================================
+exports.getLastWatered = async (req, res) => {
   const { user_id } = req.query;
+
   if (!user_id) {
     return res.status(400).json({ message: 'user_id가 필요합니다.' });
   }
 
-  const sql = 'SELECT last_watered FROM users WHERE id = ?';
-  db.query(sql, [user_id], (err, rows) => {
-    if (err) return res.status(500).json({ message: '조회 실패', error: err });
-    if (rows.length === 0) return res.status(404).json({ message: '사용자 없음' });
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT last_watered FROM users WHERE id = ?',
+      [user_id]
+    );
 
-    res.status(200).json({ lastWatered: rows[0].last_watered });
-  });
+    if (rows.length === 0) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    return res.status(200).json({
+      lastWatered: rows[0].last_watered
+    });
+  } catch (err) {
+    console.error('물 주기 조회 오류:', err);
+    return res.status(500).json({ message: '서버 오류', error: err.toString() });
+  }
 };
-

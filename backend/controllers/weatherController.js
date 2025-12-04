@@ -1,10 +1,13 @@
 const axios = require('axios');
 
+// 대전 좌표 (기본값)
+const DAEJEON_LAT = 36.3504;
+const DAEJEON_LON = 127.3845;
+
 exports.getCurrentWeather = async (req, res) => {
-  const { lat, lon } = req.query;
-  if (!lat || !lon) {
-    return res.status(400).json({ message: 'lat, lon 쿼리 파라미터를 모두 입력해주세요.' });
-  }
+  // 대전 좌표를 기본값으로 사용
+  const lat = req.query.lat || DAEJEON_LAT;
+  const lon = req.query.lon || DAEJEON_LON;
 
   try {
     const apiKey = process.env.WEATHER_API_KEY;
@@ -19,11 +22,11 @@ exports.getCurrentWeather = async (req, res) => {
       }
     });
 
-    const { temperature, humidity } = data.main;
+    const { temp, humidity } = data.main;
     const { icon, description } = data.weather[0];
 
     res.json({
-      temperature: Math.round(temperature),  // 정수로 반올림
+      temperature: Math.round(temp),  // 정수로 반올림
       humidity,                       // % 단위
       icon,                           // 아이콘 코드 (e.g. "10d")
       description                     // 날씨 설명 (e.g. "가벼운 비")

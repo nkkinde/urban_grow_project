@@ -32,14 +32,9 @@ export default function WriteMemoPage() {
         setMemo(res.data.content);
         setIsEdit(true);
         
-        // 기존 이미지 로드
-        if (res.data.image_paths) {
-          try {
-            const imagePaths = JSON.parse(res.data.image_paths);
-            setExistingImages(imagePaths);
-          } catch (e) {
-            setExistingImages([]);
-          }
+        // 기존 이미지 로드 (Backend에서 이미 배열로 파싱되어 옴)
+        if (res.data.image_paths && Array.isArray(res.data.image_paths)) {
+          setExistingImages(res.data.image_paths);
         }
       } catch (err) {
         if (err.response?.status === 404) {
@@ -183,20 +178,29 @@ export default function WriteMemoPage() {
         <div className="image-preview-section">
           <h3 className="preview-title">저장된 사진</h3>
           <div className="image-preview-grid">
-            {existingImages.map((imagePath, index) => (
-              <div key={`existing-${index}`} className="image-preview-item">
-                <img 
-                  src={`${API_URL}/${imagePath}`}
-                  alt={`existing-${index}`} 
-                />
-                <button
-                  className="remove-image-btn"
-                  onClick={() => removeImage(index, true)}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+            {existingImages.map((imagePath, index) => {
+              const displayPath = imagePath.includes('uploads/') 
+                ? imagePath.substring(imagePath.indexOf('uploads/'))
+                : imagePath;
+              return (
+                <div key={`existing-${index}`} className="image-preview-item">
+                  <img 
+                    src={`${API_URL}/${displayPath}`}
+                    alt={`existing-${index}`}
+                    onError={(e) => {
+                      console.error('이미지 로드 실패:', displayPath);
+                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="12" fill="%23999"%3E로드실패%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                  <button
+                    className="remove-image-btn"
+                    onClick={() => removeImage(index, true)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

@@ -63,13 +63,13 @@ export default function Plantdiary() {
   }, [user_id]);
 
   // 이미지 경로 파싱
-  const parseImagePaths = (imagePathsString) => {
-    if (!imagePathsString) return [];
-    try {
-      return JSON.parse(imagePathsString);
-    } catch {
-      return [];
+  const parseImagePaths = (imagePaths) => {
+    if (!imagePaths) return [];
+    // Backend에서 이미 배열로 파싱하여 보내줌
+    if (Array.isArray(imagePaths)) {
+      return imagePaths.filter(p => p && typeof p === 'string');
     }
+    return [];
   };
 
   // 메모 데이터 초기화
@@ -98,7 +98,18 @@ export default function Plantdiary() {
       setMemo(res.data.content || "");
       setCreatedAt(res.data.created_at);
       setUpdatedAt(res.data.updated_at);
-      setImages(parseImagePaths(res.data.image_paths));
+      
+      const parsedImages = parseImagePaths(res.data.image_paths);
+      console.log('원본 image_paths (DB에서):', res.data.image_paths);
+      console.log('파싱된 이미지 배열:', parsedImages);
+      console.log('파싱된 이미지 개수:', parsedImages.length);
+      
+      if (parsedImages && parsedImages.length > 0) {
+        console.log('첫번째 이미지 경로:', parsedImages[0]);
+        console.log('전체 URL이 될 경로:', `${API_URL}/${parsedImages[0]}`);
+      }
+      
+      setImages(parsedImages);
       setHasMemo(true);
     } catch (err) {
       if (err.response?.status === 404) {
@@ -264,13 +275,21 @@ export default function Plantdiary() {
             </p>
 
             {/* 이미지 슬라이더 */}
-            {images.length > 0 && (
+            {images && images.length > 0 ? (
               <div className="image-slider-container">
                 <div className="image-display">
                   <img
-                    src={`${API_URL}/${images[currentImageIndex]}`}
+                    src={
+                      images[currentImageIndex].startsWith('http')
+                        ? images[currentImageIndex]
+                        : `${API_URL}/${images[currentImageIndex]}`
+                    }
                     alt={`메모 이미지 ${currentImageIndex + 1}`}
                     className="memo-image"
+                    onError={(e) => {
+                      console.error('이미지 로드 실패:', images[currentImageIndex]);
+                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%23999"%3E이미지를 로드할 수 없습니다%3C/text%3E%3C/svg%3E';
+                    }}
                   />
                 </div>
 
@@ -297,6 +316,10 @@ export default function Plantdiary() {
                   </button>
                 </div>
               </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                업로드된 이미지가 없습니다.
+              </p>
             )}
 
             {/* 타임스탬프 */}

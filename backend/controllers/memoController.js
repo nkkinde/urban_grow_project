@@ -40,8 +40,15 @@ exports.saveOrUpdateMemo = (req, res) => {
     }
   }
 
-  // 새로 업로드된 이미지 경로
-  const newImagePaths = files.map(file => file.path.replace(/\\/g, '/'));
+  // 새로 업로드된 이미지 경로 (정규화: uploads/로 시작하는 상대경로만 저장)
+  const newImagePaths = files.map(file => {
+    let filePath = file.path.replace(/\\/g, '/');
+    // "uploads/"부터의 상대경로만 저장
+    if (filePath.includes('uploads/')) {
+      filePath = filePath.substring(filePath.indexOf('uploads/'));
+    }
+    return filePath;
+  });
   
   // 기존 이미지 + 새로운 이미지 합치기
   const allImagePaths = [...existingImageArray, ...newImagePaths];
@@ -136,9 +143,35 @@ exports.getMemoByDate = (req, res) => {
     if (err) return res.status(500).json({ message: 'DB 조회 오류', error: err });
     if (rows.length === 0) return res.status(404).json({ message: '메모 없음' });
 
+    // image_paths 처리 - MySQL2가 JSON을 자동 파싱할 수 있음
+    let imagePaths = [];
+    const rawImagePaths = rows[0].image_paths;
+    
+    console.log('DB에서 가져온 image_paths:', rawImagePaths);
+    console.log('타입:', typeof rawImagePaths);
+    
+    if (rawImagePaths) {
+      if (Array.isArray(rawImagePaths)) {
+        // 이미 배열인 경우 (MySQL2 자동 파싱)
+        imagePaths = rawImagePaths;
+      } else if (typeof rawImagePaths === 'string') {
+        // 문자열인 경우 파싱 필요
+        try {
+          imagePaths = JSON.parse(rawImagePaths);
+          if (!Array.isArray(imagePaths)) {
+            imagePaths = [];
+          }
+        } catch {
+          imagePaths = [];
+        }
+      }
+    }
+    
+    console.log('최종 imagePaths:', imagePaths);
+
     res.status(200).json({
       content: rows[0].content,
-      image_paths: rows[0].image_paths,
+      image_paths: imagePaths,
       created_at: rows[0].created_at,
       updated_at: rows[0].updated_at
     });
@@ -162,12 +195,25 @@ exports.deleteMemo = (req, res) => {
     // 이미지 파일 삭제
     if (rows.length > 0 && rows[0].image_paths) {
       try {
-        const imagePaths = JSON.parse(rows[0].image_paths);
-        imagePaths.forEach((imagePath) => {
-          fs.unlink(imagePath, (err) => {
-            if (err) console.error('이미지 파일 삭제 실패:', err);
+        let imagePaths = rows[0].image_paths;
+        
+        // JSON 배열인지 확인
+        if (typeof imagePaths === 'string') {
+          if (imagePaths.startsWith('[')) {
+            imagePaths = JSON.parse(imagePaths);
+          } else {
+            // 단일 경로 문자열인 경우 배열로 변환
+            imagePaths = [imagePaths];
+          }
+        }
+        
+        if (Array.isArray(imagePaths)) {
+          imagePaths.forEach((imagePath) => {
+            fs.unlink(imagePath, (err) => {
+              if (err) console.error('이미지 파일 삭제 실패:', err);
+            });
           });
-        });
+        }
       } catch (e) {
         console.error('이미지 경로 파싱 실패:', e);
       }

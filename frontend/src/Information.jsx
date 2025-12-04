@@ -3,26 +3,58 @@ import "./Information.css";
 import { useNavigate } from "react-router-dom";
 import { useUserNickname } from "./UserNickname";
 import BottomNav from "./BottomNav";
+import axios from "axios";
+import API_URL from "./api.js";
+
+// 레벨별 비디오 import
+import level1Video from "./assets/plant_icon1.mp4";
+import level2Video from "./assets/plant_icon2.mp4";
+import level3Video from "./assets/plant_icon3.mp4";
+import level4Video from "./assets/plant_icon4.mp4";
 
 function Information() {
   const navigate = useNavigate();
   const { nickname } = useUserNickname();
   const [connectedDevice, setConnectedDevice] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [level, setLevel] = useState(1);
+
+  // 레벨에 따른 비디오 선택
+  const getVideoByLevel = (lv) => {
+    switch (lv) {
+      case 1: return level1Video;
+      case 2: return level2Video;
+      case 3: return level3Video;
+      case 4: return level4Video;
+      default: return level1Video;
+    }
+  };
 
   useEffect(() => {
     const userId = localStorage.getItem("id");
     if (!userId) {
       alert("로그인이 필요합니다.");
       navigate("/");
+      return;
     }
+
+    // 레벨 조회
+    const fetchLevel = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/users/level?user_id=${userId}`);
+        setLevel(res.data.level || 1);
+      } catch (err) {
+        console.error("레벨 조회 실패:", err);
+      }
+    };
+    fetchLevel();
 
     // 저장된 디바이스 정보 복구
     const savedDevice = localStorage.getItem("connectedBLEDevice");
     if (savedDevice) {
       setConnectedDevice(JSON.parse(savedDevice));
     }
-  }, []);
+  }, [navigate]);
 
   const handleBluetoothConnect = async () => {
     if (!navigator.bluetooth) {
@@ -80,7 +112,18 @@ function Information() {
 
       {/* 캐릭터 정보 */}
       <div className="Info-profile-box">
-        <div className="Info-character-circle">캐릭터</div>
+        <div className="Info-character-circle" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <video 
+            key={level}
+            muted 
+            autoPlay 
+            loop 
+            playsInline
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          >
+            <source src={getVideoByLevel(level)} type="video/mp4" />
+          </video>
+        </div>
         <div className="character-name">{nickname}</div>
       </div>
 
